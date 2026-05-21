@@ -1,0 +1,42 @@
+services:
+
+  frontend:
+    build: ./frontend
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build: ./backend
+    expose:
+      - "5000"
+    depends_on:
+      - mongo
+    restart: always
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - uploads-data:/app/uploads
+
+  mongo:
+    image: mongo
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+volumes:
+  mongo-data:
+  uploads-data:
