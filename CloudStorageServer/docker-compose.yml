@@ -1,0 +1,14 @@
+services:
+
+  storage-server:
+    build: .
+    container_name: storage-server
+
+    ports:
+      - "9000:9000"
+
+    volumes:
+      - ./chunks:/app/chunks
+      - ./uploads:/app/uploads
+
+    restart: always
