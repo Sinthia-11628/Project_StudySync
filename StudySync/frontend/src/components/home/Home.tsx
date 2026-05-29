@@ -69,7 +69,7 @@ const Home = () => {
               >
                 <Link to="/registration">
                   <UserPlus size={20} />
-                  Register
+                  Sign Up
                 </Link>
               </Button>
             </div>
