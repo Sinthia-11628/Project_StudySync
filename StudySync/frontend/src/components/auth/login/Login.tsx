@@ -34,7 +34,12 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const res = await API.post("/auth/login", formData);
+      const payload = {
+        email: formData.email.trim(),
+        password: formData.password,
+      };
+
+      const res = await API.post("/auth/login", payload);
 
       if (res.status === 200) {
         localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -105,7 +110,7 @@ const LoginForm = () => {
                 <Input
                   id="email"
                   name="email"
-                  type="email"
+                  type="text"
                   placeholder="write your email or username"
                   className="pl-10 h-12 rounded-xl border-slate-200 focus-visible:ring-purple-500 bg-white"
                   value={formData.email}

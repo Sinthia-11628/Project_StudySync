@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import API from "@/api/api";
 
 export default function RegistrationPage() {
@@ -20,14 +21,29 @@ export default function RegistrationPage() {
     // Map frontend field names to backend field names
     const registrationData = new FormData();
     registrationData.append("name", formData.get("fullName")?.toString() || "");
-    registrationData.append("username", formData.get("userName")?.toString() || "");
-    registrationData.append("varsity", formData.get("university")?.toString() || "");
-    registrationData.append("varsityId", formData.get("studentId")?.toString() || "");
-    registrationData.append("dept", formData.get("department")?.toString() || "");
+    registrationData.append(
+      "username",
+      formData.get("userName")?.toString() || "",
+    );
+    registrationData.append(
+      "varsity",
+      formData.get("university")?.toString() || "",
+    );
+    registrationData.append(
+      "varsityId",
+      formData.get("studentId")?.toString() || "",
+    );
+    registrationData.append(
+      "dept",
+      formData.get("department")?.toString() || "",
+    );
     registrationData.append("batch", formData.get("batch")?.toString() || "");
     registrationData.append("email", formData.get("email")?.toString() || "");
     registrationData.append("phone", formData.get("phone")?.toString() || "");
-    registrationData.append("password", formData.get("password")?.toString() || "");
+    registrationData.append(
+      "password",
+      formData.get("password")?.toString() || "",
+    );
 
     const profilePic = formData.get("profilePic") as File;
     if (profilePic && profilePic.size > 0) {
@@ -35,11 +51,7 @@ export default function RegistrationPage() {
     }
 
     try {
-      await API.post("/auth/register", registrationData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await API.post("/auth/register", registrationData);
 
       alert("Registration successful! Please login.");
       // Redirect to login page
@@ -52,7 +64,15 @@ export default function RegistrationPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#f1f5f9] flex items-center justify-center p-6 lg:p-12 font-sans overflow-hidden">
+    <div className="relative min-h-[calc(100vh-80px)] bg-[#f1f5f9] flex items-center justify-center p-6 lg:p-12 font-sans overflow-hidden">
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          to="/"
+          className="text-slate-500 hover:text-purple-600 flex items-center gap-2 font-medium transition-colors"
+        >
+          <ArrowRight size={18} className="rotate-180" /> Back to Home
+        </Link>
+      </div>
       <div className="w-full max-w-[1500px] flex flex-col xl:flex-row items-center justify-between gap-12 xl:gap-20">
         <div className="w-full xl:w-[40%] flex justify-center">
           <img
@@ -76,6 +96,12 @@ export default function RegistrationPage() {
               <p className="text-[15px] text-slate-500 font-medium mt-1 text-center">
                 Create an account to start sharing notes and skills
               </p>
+              <Link
+                to="/"
+                className="mt-4 text-sm font-semibold text-[#4f6bff] hover:underline"
+              >
+                ← Back to Home
+              </Link>
             </div>
 
             <CardContent className="p-0">
@@ -228,7 +254,7 @@ export default function RegistrationPage() {
                       name="profilePic"
                       type="file"
                       required
-                      className="h-[46px] px-3 py-[9px] text-slate-500 file:text-[14px] file:font-semibold file:text-slate-700 file:bg-slate-100 file:border-0 file:mr-3 file:-ml-1 file:px-4 file:py-1 file:px-4 file:py-1 file:rounded-md border-slate-300 focus-visible:ring-indigo-500 rounded-xl text-[14px] cursor-pointer"
+                      className="h-[46px] px-3 py-[9px] text-slate-500 file:text-[14px] file:font-semibold file:text-slate-700 file:bg-slate-100 file:border-0 file:mr-3 file:-ml-1 file:px-4 file:py-1 file:rounded-md border-slate-300 focus-visible:ring-indigo-500 rounded-xl text-[14px] cursor-pointer"
                     />
                   </div>
 

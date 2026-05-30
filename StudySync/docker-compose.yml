@@ -1,5 +1,4 @@
 services:
-
   frontend:
     build: ./frontend
     expose:
@@ -17,6 +16,7 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/studysync
     volumes:
       - uploads-data:/app/uploads
 

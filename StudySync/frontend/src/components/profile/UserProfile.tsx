@@ -22,9 +22,12 @@ import {
   Bell,
   LayoutDashboard,
   ArrowLeft,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface User {
+  id?: string;
   _id?: string;
   name: string;
   username: string;
@@ -42,6 +45,7 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -57,6 +61,16 @@ const UserProfile = () => {
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [securityData, setSecurityData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -72,6 +86,7 @@ const UserProfile = () => {
         email: parsedUser.email || "",
         phone: parsedUser.phone || "",
       });
+      setUserId(parsedUser.id || parsedUser._id || "");
       if (parsedUser.profilePic) {
         setPreviewImage(getImageUrl(parsedUser.profilePic) ?? null);
       }
@@ -85,6 +100,21 @@ const UserProfile = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSecurityData({
+      ...securityData,
+      [name]: value,
+    });
+  };
+
+  const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +131,7 @@ const UserProfile = () => {
     setMessage({ type: "", text: "" });
 
     const updateData = new FormData();
+    updateData.append("id", userId);
     Object.entries(formData).forEach(([key, value]) => {
       updateData.append(key, value);
     });
@@ -110,11 +141,7 @@ const UserProfile = () => {
     }
 
     try {
-      const res = await API.put("/user/update", updateData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const res = await API.put("/auth/update", updateData);
 
       if (res.status === 200) {
         setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -127,6 +154,47 @@ const UserProfile = () => {
       setMessage({
         type: "error",
         text: err?.response?.data?.message || "Failed to update profile",
+      });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    }
+  };
+
+  const handleSecuritySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (securityData.newPassword !== securityData.confirmPassword) {
+      setMessage({ type: "error", text: "New passwords do not match." });
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const payload = {
+        id: userId,
+        currentPassword: securityData.currentPassword,
+        newPassword: securityData.newPassword,
+      };
+
+      const res = await API.put("/auth/update", payload);
+      if (res.status === 200) {
+        setMessage({ type: "success", text: "Password updated successfully!" });
+        if (res.data.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        }
+        setSecurityData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (err: any) {
+      console.error("Security update error:", err);
+      setMessage({
+        type: "error",
+        text: err?.response?.data?.message || "Failed to update password.",
       });
     } finally {
       setIsLoading(false);
@@ -245,8 +313,14 @@ const UserProfile = () => {
                 {activeTab === "notifications" && "Notifications"}
               </CardTitle>
               <CardDescription className="text-[15px] text-slate-500 mt-1.5">
-                Update your personal information and how others see you on the
-                platform.
+                {activeTab === "profile" &&
+                  "Update your public profile information and how others see you."}
+                {activeTab === "academic" &&
+                  "Update your academic details and student credentials."}
+                {activeTab === "security" &&
+                  "Change your password and account security settings."}
+                {activeTab === "notifications" &&
+                  "Manage notification preferences and alerts for your account."}
               </CardDescription>
             </CardHeader>
 
@@ -266,7 +340,7 @@ const UserProfile = () => {
                 </div>
               )}
 
-              {activeTab === "profile" || activeTab === "academic" ? (
+              {activeTab === "profile" ? (
                 <form onSubmit={handleSubmit} className="space-y-10">
                   {/* Avatar Section */}
                   <div className="flex items-center gap-6">
@@ -316,9 +390,7 @@ const UserProfile = () => {
 
                   <div className="h-px w-full bg-slate-100/80"></div>
 
-                  {/* Form Fields Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
-                    {/* Dynamic Label styling based on active tab */}
                     <div className="space-y-2">
                       <Label
                         htmlFor="name"
@@ -388,15 +460,28 @@ const UserProfile = () => {
                         className="h-[46px] border-slate-200 focus-visible:ring-[#4f6bff] rounded-xl bg-slate-50/50 hover:bg-white focus:bg-white transition-colors text-[15px] px-4 shadow-sm"
                       />
                     </div>
+                  </div>
 
-                    <div className="col-span-1 sm:col-span-2 pt-2">
-                      <h3 className="text-[15px] font-bold text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-2">
-                        <BookOpen size={16} className="text-[#d43dff]" />{" "}
-                        Academic Detail
-                      </h3>
-                      <div className="h-px w-full bg-slate-100/80 mb-4"></div>
-                    </div>
-
+                  <div className="pt-6 mt-4 flex justify-end border-t border-slate-100/80">
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full sm:w-auto px-8 h-[48px] bg-gradient-to-r from-[#4f6bff] to-[#4f6bff]/90 hover:from-[#3f57db] hover:to-[#3f57db] text-white font-bold rounded-xl text-[15px] transition-all shadow-[0_4px_14px_0_rgba(79,107,255,0.25)] disabled:opacity-70 flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              ) : activeTab === "academic" ? (
+                <form onSubmit={handleSubmit} className="space-y-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
                     <div className="space-y-2">
                       <Label
                         htmlFor="varsity"
@@ -463,6 +548,114 @@ const UserProfile = () => {
                         required
                         className="h-[46px] border-slate-200 focus-visible:ring-[#4f6bff] rounded-xl bg-slate-50/50 hover:bg-white focus:bg-white transition-colors text-[15px] px-4 shadow-sm"
                       />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-4 flex justify-end border-t border-slate-100/80">
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full sm:w-auto px-8 h-[48px] bg-gradient-to-r from-[#4f6bff] to-[#4f6bff]/90 hover:from-[#3f57db] hover:to-[#3f57db] text-white font-bold rounded-xl text-[15px] transition-all shadow-[0_4px_14px_0_rgba(79,107,255,0.25)] disabled:opacity-70 flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              ) : activeTab === "security" ? (
+                <form onSubmit={handleSecuritySubmit} className="space-y-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
+                    <div className="space-y-2 relative">
+                      <Label
+                        htmlFor="currentPassword"
+                        className="text-[14px] text-slate-700 font-semibold"
+                      >
+                        Current Password
+                      </Label>
+                      <Input
+                        id="currentPassword"
+                        name="currentPassword"
+                        type={showPasswords.current ? "text" : "password"}
+                        value={securityData.currentPassword}
+                        onChange={handleSecurityChange}
+                        required
+                        className="h-[46px] border-slate-200 focus-visible:ring-[#4f6bff] rounded-xl bg-slate-50/50 hover:bg-white focus:bg-white transition-colors text-[15px] px-4 shadow-sm pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("current")}
+                        className="absolute right-3 top-9 text-slate-500 hover:text-slate-700"
+                      >
+                        {showPasswords.current ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 relative">
+                      <Label
+                        htmlFor="newPassword"
+                        className="text-[14px] text-slate-700 font-semibold"
+                      >
+                        New Password
+                      </Label>
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type={showPasswords.new ? "text" : "password"}
+                        value={securityData.newPassword}
+                        onChange={handleSecurityChange}
+                        required
+                        className="h-[46px] border-slate-200 focus-visible:ring-[#4f6bff] rounded-xl bg-slate-50/50 hover:bg-white focus:bg-white transition-colors text-[15px] px-4 shadow-sm pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("new")}
+                        className="absolute right-3 top-9 text-slate-500 hover:text-slate-700"
+                      >
+                        {showPasswords.new ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 relative">
+                      <Label
+                        htmlFor="confirmPassword"
+                        className="text-[14px] text-slate-700 font-semibold"
+                      >
+                        Confirm Password
+                      </Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showPasswords.confirm ? "text" : "password"}
+                        value={securityData.confirmPassword}
+                        onChange={handleSecurityChange}
+                        required
+                        className="h-[46px] border-slate-200 focus-visible:ring-[#4f6bff] rounded-xl bg-slate-50/50 hover:bg-white focus:bg-white transition-colors text-[15px] px-4 shadow-sm pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("confirm")}
+                        className="absolute right-3 top-9 text-slate-500 hover:text-slate-700"
+                      >
+                        {showPasswords.confirm ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 

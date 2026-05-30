@@ -50,11 +50,27 @@ const Dashboard = () => {
   const [showNoteUpload, setShowNoteUpload] = useState(false);
   const [showSkillUpload, setShowSkillUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    username: string;
+    profilePic?: string;
+  } | null>(null);
 
   // Authentication Check
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (!savedUser) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedUser);
+      setUser(parsed);
+    } catch (err) {
+      console.error("Failed to parse saved user", err);
+      localStorage.removeItem("user");
       navigate("/login");
     }
   }, [navigate]);
@@ -74,9 +90,7 @@ const Dashboard = () => {
   }, []);
 
   // Handlers
-  const handleAddNote = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleAddNote = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedFile) {
@@ -105,7 +119,9 @@ const Dashboard = () => {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Note save failed: ${res.status} ${res.statusText} - ${text}`);
+        throw new Error(
+          `Note save failed: ${res.status} ${res.statusText} - ${text}`,
+        );
       }
 
       const result = await res.json();
@@ -165,37 +181,91 @@ const Dashboard = () => {
 
       <div className="max-w-7xl mx-auto p-6 md:p-12 relative z-10 space-y-12">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/50 pb-8">
-          <div className="space-y-1">
-            <h1 className="text-5xl font-black text-slate-900 tracking-tighter">
-              <span className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 tracking-tight">
-                StudySync
-              </span>
-            </h1>
-            <p className="text-slate-500 font-bold text-lg">
-              Organize and showcase your growth..
-            </p>
+        <div className="flex flex-col xl:flex-row justify-between items-stretch gap-6 border-b border-white/50 pb-10">
+          <div className="flex-1 rounded-[2.5rem] bg-white/95 border border-slate-200 shadow-[0_30px_80px_rgba(15,23,42,0.08)] p-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm mb-6">
+              <Award size={16} /> Dashboard Summary
+            </div>
+            <div className="space-y-4 max-w-3xl">
+              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                Welcome back, {user ? user.name.split(" ")[0] : "Student"}.
+              </h1>
+              <p className="text-slate-600 text-lg leading-8">
+                Access your study materials, track your skills, and keep your campus workflow organized from one polished dashboard.
+              </p>
+              <div className="mt-6 text-slate-500 text-sm bg-slate-50 border border-slate-100 rounded-3xl p-5 shadow-sm">
+                <p className="font-semibold text-slate-700">Signed in as</p>
+                <p className="mt-2 text-base text-slate-900">
+                  {user?.username} • {user?.email}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
+                  Notes
+                </p>
+                <p className="text-3xl font-black text-slate-900">{notes.length}</p>
+                <p className="text-slate-500 mt-2 text-sm">Total study files uploaded</p>
+              </div>
+              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
+                  Skills
+                </p>
+                <p className="text-3xl font-black text-slate-900">{skills.length}</p>
+                <p className="text-slate-500 mt-2 text-sm">Skill entries added</p>
+              </div>
+              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
+                  Profile
+                </p>
+                <p className="text-3xl font-black text-slate-900">{user?.username}</p>
+                <p className="text-slate-500 mt-2 text-sm">Your current campus identity</p>
+              </div>
+            </div>
           </div>
+
+          <div className="xl:w-[28rem] rounded-[2.5rem] bg-gradient-to-br from-blue-600 via-slate-900 to-indigo-700 p-8 shadow-2xl text-white">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] font-semibold text-white/80 mb-6">
+              Quick actions
+            </div>
+            <h2 className="text-3xl font-black tracking-tight">Professional growth hub</h2>
+            <p className="mt-4 text-slate-200 leading-7">
+              Stay on top of your study progress with a clear, modern workspace built for fast uploads, skill sharing, and academic collaboration.
+            </p>
+            <div className="mt-8 grid gap-4">
+              <div className="rounded-3xl bg-white/10 p-5 border border-white/10 shadow-lg shadow-slate-900/10">
+                <p className="text-sm text-slate-200 font-semibold">Next recommended step</p>
+                <p className="mt-2 text-lg font-bold">Upload a new note to your course library</p>
+              </div>
+              <div className="rounded-3xl bg-white/10 p-5 border border-white/10 shadow-lg shadow-slate-900/10">
+                <p className="text-sm text-slate-200 font-semibold">Pro tip</p>
+                <p className="mt-2 text-lg font-bold">Keep your profile details up to date for better peer matching</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
           {/* Premium Tab Switcher */}
           <div className="flex p-1.5 bg-white/80 backdrop-blur-sm shadow-2xl shadow-blue-100 rounded-3xl border border-white">
             <button
               onClick={() => setActiveTab("notes")}
-              className={`flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 ${
+              className={
                 activeTab === "notes"
-                  ? "bg-blue-600 text-white shadow-xl shadow-blue-200"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+                  ? "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 bg-blue-600 text-white shadow-xl shadow-blue-200"
+                  : "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 text-slate-400 hover:text-slate-600"
+              }
             >
               <BookOpen size={20} /> NOTES
             </button>
             <button
               onClick={() => setActiveTab("skills")}
-              className={`flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 ${
+              className={
                 activeTab === "skills"
-                  ? "bg-emerald-500 text-white shadow-xl shadow-emerald-200"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
+                  ? "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 bg-emerald-500 text-white shadow-xl shadow-emerald-200"
+                  : "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 text-slate-400 hover:text-slate-600"
+              }
             >
               <Zap size={20} /> SKILLS
             </button>
@@ -264,11 +334,14 @@ const Dashboard = () => {
                       <div className="pt-6 border-t border-slate-50 flex justify-between items-center">
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-bold text-slate-400">
-                            {new Date(note.uploadedAt).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {new Date(note.uploadedAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                           <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-blue-50 text-blue-600 rounded w-fit">
                             {note.status || "saved"}

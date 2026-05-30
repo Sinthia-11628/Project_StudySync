@@ -2,10 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import {
   BookOpen,
-  Users,
-  FileText,
   ArrowRight,
-  Search,
   LogIn,
   UserPlus,
   GraduationCap,
@@ -14,7 +11,7 @@ import {
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans overflow-x-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-100 via-cyan-50 to-indigo-100 flex flex-col font-sans overflow-x-hidden">
       {/* Navigation Bar */}
       <nav className="w-full bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,6 +43,12 @@ const Home = () => {
               >
                 Skill Exchange
               </a>
+              <a
+                href="#faq"
+                className="text-slate-600 hover:text-purple-600 font-semibold transition-colors"
+              >
+                FAQ
+              </a>
             </div>
 
             {/* Auth Buttons with React Router Links */}
@@ -69,7 +72,7 @@ const Home = () => {
               >
                 <Link to="/registration">
                   <UserPlus size={20} />
-                  Sign Up
+                  Register
                 </Link>
               </Button>
             </div>
@@ -77,7 +80,7 @@ const Home = () => {
         </div>
       </nav>
       {/* Colorful Hero Section with Image */}
-      <section className="relative w-full overflow-hidden bg-slate-50 py-16 md:py-24">
+      <section className="relative w-full overflow-hidden bg-transparent py-16 md:py-24">
         {/* Colorful Background Blobs */}
         <div className="absolute top-0 -left-40 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-pulse"></div>
         <div
@@ -110,17 +113,19 @@ const Home = () => {
               </p>
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
                 <Button
+                  asChild
                   size="lg"
                   className="bg-slate-900 hover:bg-slate-800 text-white gap-2 shadow-2xl shadow-slate-900/20 h-14 px-8 text-lg rounded-2xl transition-transform hover:-translate-y-1"
                 >
-                  <Search size={20} /> Browse Notes
+                  <Link to="/registration">Get Started</Link>
                 </Button>
                 <Button
+                  asChild
                   size="lg"
                   variant="outline"
                   className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 gap-2 h-14 px-8 text-lg rounded-2xl bg-white/50 backdrop-blur-sm transition-transform hover:-translate-y-1"
                 >
-                  <Users size={20} /> Find Partners
+                  <a href="#learn more">Explore Learn More</a>
                 </Button>
               </div>
             </div>
@@ -133,24 +138,65 @@ const Home = () => {
                 alt="Students collaborating and sharing notes"
                 className="relative z-10 w-full h-auto object-cover rounded-3xl shadow-2xl border-4 border-white transform transition-transform duration-500 hover:scale-[1.02]"
               />
-              {/* Floating Badge */}
-              <div
-                className="absolute -bottom-6 -left-6 z-20 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 animate-bounce"
-                style={{ animationDuration: "3s" }}
-              >
-                <div className="bg-green-100 p-3 rounded-full text-green-600">
-                  <FileText size={24} />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 font-bold uppercase">
-                    New Notes
-                  </p>
-                  <p className="text-sm font-extrabold text-slate-900">
-                    100+ Uploaded Today
-                  </p>
-                </div>
-              </div>
+              {/* Decorative accent removed for clarity */}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Learn More Section */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-16" id="learn more">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900">
+            Learn More About StudySync
+          </h2>
+          <p className="text-slate-500 mt-3 text-lg">
+            Quick ways StudySync helps you succeed on campus
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-sky-50 via-white to-slate-100 p-6 rounded-3xl shadow-2xl shadow-sky-200/40 border border-sky-100 flex flex-col">
+            <img
+              src="/images/library.png"
+              alt="organized notes"
+              className="w-full h-40 object-cover rounded-3xl mb-4 border border-slate-200"
+            />
+            <h4 className="font-semibold text-slate-900 mb-2">
+              Organized Course Libraries
+            </h4>
+            <p className="text-slate-600 flex-1">
+              Create course-specific libraries so your classmates can find notes
+              faster.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-fuchsia-50 via-white to-purple-50 p-6 rounded-3xl shadow-2xl shadow-fuchsia-200/40 border border-fuchsia-100 flex flex-col">
+            <img
+              src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=800&q=60"
+              alt="study group"
+              className="w-full h-40 object-cover rounded-3xl mb-4 border border-slate-200"
+            />
+            <h4 className="font-semibold text-slate-900 mb-2">
+              Peer Collaboration
+            </h4>
+            <p className="text-slate-600 flex-1">
+              Connect with classmates, request help, and form study groups
+              effortlessly.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-6 rounded-3xl shadow-2xl shadow-emerald-200/40 border border-emerald-100 flex flex-col">
+            <img
+              src="/images/upload.png"
+              alt="secure uploads"
+              className="w-full h-40 object-cover rounded-3xl mb-4 border border-slate-200"
+            />
+            <h4 className="font-semibold text-slate-900 mb-2">
+              Secure Uploads
+            </h4>
+            <p className="text-slate-600 flex-1">
+              Files are stored safely and can be shared selectively with your
+              campus network.
+            </p>
           </div>
         </div>
       </section>
@@ -174,7 +220,7 @@ const Home = () => {
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-8 text-white shadow-xl shadow-blue-500/30 transform -rotate-6 group-hover:rotate-0 transition-all duration-300">
-              <FileText size={40} />
+              <BookOpen size={40} />
             </div>
             <h3 className="text-3xl font-bold text-slate-900 mb-4">
               Notes Sharing
@@ -241,6 +287,97 @@ const Home = () => {
                 Automatic Course Matching Logic
               </li>
             </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section
+        className="relative w-full max-w-7xl mx-auto px-6 py-20 bg-gradient-to-br from-slate-50 via-cyan-50 to-blue-50 rounded-[2rem] shadow-2xl shadow-slate-200/40 border border-slate-200"
+        id="faq"
+      >
+        <div className="pointer-events-none absolute -top-12 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-gradient-to-br from-cyan-200/30 to-transparent blur-3xl" />
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-slate-500 mt-3 text-lg">
+            Quick answers to common questions about StudySync
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-7 rounded-3xl shadow-xl shadow-sky-200/30 border border-sky-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-sky-700 mb-4 border border-sky-200">
+              StudySync overview
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">
+              What is StudySync?
+            </h4>
+            <p className="text-slate-600 leading-relaxed">
+              StudySync is a campus-focused platform to share organized study
+              materials, request help from peers, and manage your learning
+              resources in one place.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-fuchsia-50 via-white to-pink-50 p-7 rounded-3xl shadow-xl shadow-fuchsia-200/30 border border-fuchsia-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-fuchsia-700 mb-4 border border-fuchsia-200">
+              Upload notes
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">
+              How do I upload notes?
+            </h4>
+            <p className="text-slate-600 leading-relaxed">
+              After creating an account, go to your dashboard and use the Upload
+              area to add PDFs or resources to specific courses. Files are
+              stored securely and can be tagged for easy search.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-7 rounded-3xl shadow-xl shadow-emerald-200/30 border border-emerald-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-emerald-700 mb-4 border border-emerald-200">
+              Data & privacy
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">
+              Is my data private?
+            </h4>
+            <p className="text-slate-600 leading-relaxed">
+              Yes. Only you control which items are public. Sensitive
+              information should never be shared in your uploads.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-amber-50 via-white to-orange-50 p-7 rounded-3xl shadow-xl shadow-amber-200/30 border border-amber-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-amber-700 mb-4 border border-amber-200">
+              Support
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">Need help?</h4>
+            <p className="text-slate-600 leading-relaxed">
+              If you run into issues, contact the support team through the Help
+              page or raise a support request from your dashboard.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-7 rounded-3xl shadow-xl shadow-indigo-200/30 border border-indigo-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-indigo-700 mb-4 border border-indigo-200">
+              Sharing with peers
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">
+              Can I share notes with classmates?
+            </h4>
+            <p className="text-slate-600 leading-relaxed">
+              Yes. Share notes with individual classmates or make them available
+              to your course network so peers can download and study together.
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-rose-50 via-white to-pink-50 p-7 rounded-3xl shadow-xl shadow-rose-200/30 border border-rose-100">
+            <div className="inline-flex items-center rounded-full bg-slate-100/80 px-4 py-2 text-sm font-semibold text-rose-700 mb-4 border border-rose-200">
+              Course folders
+            </div>
+            <h4 className="font-semibold text-slate-900 mb-3">
+              How do I organize course materials?
+            </h4>
+            <p className="text-slate-600 leading-relaxed">
+              Use course tags and folder labels inside your dashboard to keep
+              notes organized by subject, semester, or assignment type.
+            </p>
           </div>
         </div>
       </section>
