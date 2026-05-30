@@ -44,6 +44,7 @@ const Dashboard = () => {
   // States
   const [activeTab, setActiveTab] = useState("notes");
   const [notes, setNotes] = useState<Note[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(false);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [noteSearchTerm, setNoteSearchTerm] = useState("");
   const [skillSearchTerm, setSkillSearchTerm] = useState("");
@@ -78,13 +79,22 @@ const Dashboard = () => {
   // Fetch notes on load
   useEffect(() => {
     const fetchNotes = async () => {
+      setLoadingNotes(true);
       try {
         const res = await fetch(`${API_SERVER}/api/notes`);
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(
+            `Fetch notes failed: ${res.status} ${res.statusText} - ${txt}`,
+          );
+        }
         const data = await res.json();
-        setNotes(data);
+        // backend returns an array of notes
+        setNotes(Array.isArray(data) ? data : data.notes || []);
       } catch (err) {
         console.error("Failed to fetch notes:", err);
       }
+      setLoadingNotes(false);
     };
     fetchNotes();
   }, []);
@@ -126,7 +136,9 @@ const Dashboard = () => {
 
       const result = await res.json();
 
-      setNotes((prev) => [result.note, ...prev]);
+      // backend creates and returns the created note object
+      const createdNote = result && result._id ? result : result.note || result;
+      setNotes((prev) => [createdNote, ...prev]);
 
       setShowNoteUpload(false);
       setSelectedFile(null);
@@ -151,6 +163,26 @@ const Dashboard = () => {
     setSkills((prev) => [...prev, newSkill]);
     setShowSkillUpload(false);
   };
+
+  // Persist skills to localStorage and load on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("skills");
+    if (saved) {
+      try {
+        setSkills(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved skills", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("skills", JSON.stringify(skills));
+    } catch (e) {
+      console.error("Failed to persist skills", e);
+    }
+  }, [skills]);
 
   const handleDeleteNote = async (noteId: string) => {
     if (!window.confirm("Are you sure you want to delete this note?")) {
@@ -179,106 +211,132 @@ const Dashboard = () => {
       <div className="absolute top-[-5%] left-[-5%] w-[35%] h-[35%] bg-blue-500/10 rounded-full blur-[100px] -z-0" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[35%] h-[35%] bg-emerald-500/10 rounded-full blur-[100px] -z-0" />
 
-      <div className="max-w-7xl mx-auto p-6 md:p-12 relative z-10 space-y-12">
+      <div className="max-w-7xl mx-auto p-6 md:p-12 relative z-10 space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col xl:flex-row justify-between items-stretch gap-6 border-b border-white/50 pb-10">
-          <div className="flex-1 rounded-[2.5rem] bg-white/95 border border-slate-200 shadow-[0_30px_80px_rgba(15,23,42,0.08)] p-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm mb-6">
-              <Award size={16} /> Dashboard Summary
-            </div>
-            <div className="space-y-4 max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-                Welcome back, {user ? user.name.split(" ")[0] : "Student"}.
-              </h1>
-              <p className="text-slate-600 text-lg leading-8">
-                Access your study materials, track your skills, and keep your campus workflow organized from one polished dashboard.
-              </p>
-              <div className="mt-6 text-slate-500 text-sm bg-slate-50 border border-slate-100 rounded-3xl p-5 shadow-sm">
-                <p className="font-semibold text-slate-700">Signed in as</p>
-                <p className="mt-2 text-base text-slate-900">
-                  {user?.username} • {user?.email}
+        <div className="grid gap-6 xl:grid-cols-[1.7fr_0.9fr] items-start">
+          <div className="rounded-[2rem] bg-white/95 border border-white/70 shadow-[0_30px_80px_rgba(15,23,42,0.08)] p-8 md:p-10 backdrop-blur-xl">
+            <div className="flex flex-col gap-8">
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tight">
+                  Welcome back, {user ? user.name.split(" ")[0] : "Student"}!
+                </h1>
+                <p className="text-slate-500 text-sm md:text-base">
+                  {user?.email}
                 </p>
               </div>
-            </div>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
-                  Notes
-                </p>
-                <p className="text-3xl font-black text-slate-900">{notes.length}</p>
-                <p className="text-slate-500 mt-2 text-sm">Total study files uploaded</p>
-              </div>
-              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
-                  Skills
-                </p>
-                <p className="text-3xl font-black text-slate-900">{skills.length}</p>
-                <p className="text-slate-500 mt-2 text-sm">Skill entries added</p>
-              </div>
-              <div className="rounded-[2rem] bg-slate-50 p-5 border border-slate-100 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
-                  Profile
-                </p>
-                <p className="text-3xl font-black text-slate-900">{user?.username}</p>
-                <p className="text-slate-500 mt-2 text-sm">Your current campus identity</p>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 md:items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-[2rem] bg-slate-50 p-5 shadow-sm border border-slate-100">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mb-4">
+                      <BookOpen size={20} />
+                    </div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400 mb-2">
+                      notes
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {notes.length}
+                    </p>
+                  </div>
+                  <div className="rounded-[2rem] bg-orange-50 p-5 shadow-sm border border-orange-100">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 mb-4">
+                      <Zap size={20} />
+                    </div>
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500 mb-2">
+                      skills
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {skills.length}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] bg-slate-50 p-4 shadow-sm border border-slate-100 w-full sm:w-auto">
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-slate-500 mb-4">
+                    Profile Complete
+                  </p>
+                  <div className="relative w-32 h-32 mx-auto">
+                    <svg viewBox="0 0 120 120" className="w-full h-full">
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="52"
+                        fill="none"
+                        stroke="#E2E8F0"
+                        strokeWidth="14"
+                      />
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="52"
+                        fill="none"
+                        stroke="url(#profileGradient)"
+                        strokeWidth="14"
+                        strokeLinecap="round"
+                        strokeDasharray="326"
+                        strokeDashoffset="96"
+                        transform="rotate(-90 60 60)"
+                      />
+                      <defs>
+                        <linearGradient
+                          id="profileGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="0%"
+                        >
+                          <stop offset="0%" stopColor="#8B5CF6" />
+                          <stop offset="100%" stopColor="#2563EB" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-[10px] uppercase tracking-[0.35em] text-slate-400">
+                        mm
+                      </span>
+                      <span className="text-xl font-black text-slate-900">
+                        {user ? user.username?.slice(0, 2).toUpperCase() : "MM"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="xl:w-[28rem] rounded-[2.5rem] bg-gradient-to-br from-blue-600 via-slate-900 to-indigo-700 p-8 shadow-2xl text-white">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] font-semibold text-white/80 mb-6">
-              Quick actions
+          <div className="rounded-[2rem] bg-white/95 border border-white/70 shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-4 flex items-center justify-center">
+            <div className="flex gap-2 bg-slate-100 rounded-full p-1 shadow-sm">
+              <button
+                onClick={() => setActiveTab("notes")}
+                className={
+                  activeTab === "notes"
+                    ? "flex items-center gap-2 px-8 py-4 rounded-full font-black transition-all duration-300 bg-blue-600 text-white shadow-md"
+                    : "flex items-center gap-2 px-8 py-4 rounded-full font-black transition-all duration-300 text-slate-500 hover:text-slate-700"
+                }
+              >
+                <BookOpen size={18} /> NOTES
+              </button>
+              <button
+                onClick={() => setActiveTab("skills")}
+                className={
+                  activeTab === "skills"
+                    ? "flex items-center gap-2 px-8 py-4 rounded-full font-black transition-all duration-300 bg-white text-slate-900 shadow-md"
+                    : "flex items-center gap-2 px-8 py-4 rounded-full font-black transition-all duration-300 text-slate-500 hover:text-slate-700"
+                }
+              >
+                <Zap size={18} /> SKILLS
+              </button>
             </div>
-            <h2 className="text-3xl font-black tracking-tight">Professional growth hub</h2>
-            <p className="mt-4 text-slate-200 leading-7">
-              Stay on top of your study progress with a clear, modern workspace built for fast uploads, skill sharing, and academic collaboration.
-            </p>
-            <div className="mt-8 grid gap-4">
-              <div className="rounded-3xl bg-white/10 p-5 border border-white/10 shadow-lg shadow-slate-900/10">
-                <p className="text-sm text-slate-200 font-semibold">Next recommended step</p>
-                <p className="mt-2 text-lg font-bold">Upload a new note to your course library</p>
-              </div>
-              <div className="rounded-3xl bg-white/10 p-5 border border-white/10 shadow-lg shadow-slate-900/10">
-                <p className="text-sm text-slate-200 font-semibold">Pro tip</p>
-                <p className="mt-2 text-lg font-bold">Keep your profile details up to date for better peer matching</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-          {/* Premium Tab Switcher */}
-          <div className="flex p-1.5 bg-white/80 backdrop-blur-sm shadow-2xl shadow-blue-100 rounded-3xl border border-white">
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={
-                activeTab === "notes"
-                  ? "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 bg-blue-600 text-white shadow-xl shadow-blue-200"
-                  : "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 text-slate-400 hover:text-slate-600"
-              }
-            >
-              <BookOpen size={20} /> NOTES
-            </button>
-            <button
-              onClick={() => setActiveTab("skills")}
-              className={
-                activeTab === "skills"
-                  ? "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 bg-emerald-500 text-white shadow-xl shadow-emerald-200"
-                  : "flex items-center gap-2 px-10 py-4 rounded-2xl font-black transition-all duration-300 text-slate-400 hover:text-slate-600"
-              }
-            >
-              <Zap size={20} /> SKILLS
-            </button>
           </div>
         </div>
 
         {/* --- NOTES AREA --- */}
         {activeTab === "notes" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative group">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="flex-1 relative">
                 <Search
-                  className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"
                   size={24}
                 />
                 <input
@@ -286,18 +344,23 @@ const Dashboard = () => {
                   placeholder="Search in library..."
                   value={noteSearchTerm}
                   onChange={(e) => setNoteSearchTerm(e.target.value)}
-                  className="w-full pl-16 pr-6 py-5 bg-white border-none shadow-xl shadow-slate-200/50 rounded-3xl focus:ring-2 focus:ring-blue-600 outline-none text-lg"
+                  className="w-full pl-16 pr-6 py-5 bg-white border border-slate-200 shadow-lg shadow-slate-200/40 rounded-full focus:ring-2 focus:ring-blue-600 outline-none text-lg"
                 />
               </div>
               <Button
                 onClick={() => setShowNoteUpload(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-3xl px-12 h-auto py-5 text-xl font-black shadow-xl shadow-blue-100 border-none"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 h-16 text-xl font-black shadow-xl shadow-blue-100 border-none"
               >
-                <Plus size={24} className="mr-1" /> New Note
+                <Plus size={24} className="mr-2" /> New Note
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {loadingNotes && (
+                <div className="col-span-full text-center py-8 text-slate-500 font-medium">
+                  Loading notes...
+                </div>
+              )}
               {notes
                 .filter((n) =>
                   n.title.toLowerCase().includes(noteSearchTerm.toLowerCase()),
@@ -305,15 +368,15 @@ const Dashboard = () => {
                 .map((note) => (
                   <Card
                     key={note._id}
-                    className="group bg-white border-none shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-8 hover:-translate-y-2 transition-all duration-500"
+                    className="group border-none bg-gradient-to-br from-indigo-50 via-pink-50 to-emerald-50 shadow-[0_20px_50px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-8 hover:-translate-y-2 transition-all duration-500"
                   >
                     <div className="space-y-5">
                       <div className="flex justify-between items-start">
-                        <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <div className="p-4 bg-white/60 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
                           <FileText size={28} />
                         </div>
                         <div className="flex gap-2 items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 bg-slate-50 text-slate-400 rounded-full">
+                          <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-white/70 text-slate-700 rounded-full border border-white/30">
                             {note.subject}
                           </span>
                           <button
@@ -427,7 +490,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* --- MODALS --- */}
       {showNoteUpload && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100] p-4">
           <Card className="bg-white rounded-[3rem] p-10 max-w-xl w-full shadow-2xl border-none animate-in zoom-in-95 duration-200">
@@ -474,7 +536,7 @@ const Dashboard = () => {
                   className="mx-auto text-blue-300 group-hover:text-blue-500 transition-colors mb-2"
                 />
                 <p className="text-slate-500 font-black">
-                  {selectedFile ? selectedFile.name : "Select Document"}
+                  {selectedFile?.name ?? "Select Document"}
                 </p>
               </div>
               <Button
